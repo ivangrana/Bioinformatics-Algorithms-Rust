@@ -1,4 +1,5 @@
 //Petri net for metabolic flux model.
+#[derive(Debug)]
 struct Place {
     name: String,
     tokens: i32,
@@ -26,55 +27,46 @@ impl Place {
     }
 }
 
-struct Transition { // struct for the transition
+struct Transition<'a> {
+    // struct for the transition
     name: String,
-    inputs: Vec<Place>,
-    outputs: Vec<Place>,
+    input: &'a mut Place,
+    weight: i32,
 }
 
-impl Transition {
-    fn new(name: &str) -> Self {
+impl<'a> Transition<'a> {
+    fn new(name: &str, new_weight: i32, origin: &'a mut Place) -> Self {
         Self {
             name: name.to_string(),
-            inputs: Vec::new(),
-            outputs: Vec::new(),
+            input: origin,
+            weight: new_weight,
         }
+    }
+    fn fire_consumption(&mut self) {
+        println!("before {} fire_consumption:\n{:?}\n", self.name, self.input);
+        self.input.remove_tokens(self.weight);
+        println!("{} -> {:?}", self.input.name, self.input)
     }
 
-    fn add_input(&mut self, place: Place){
-        self.inputs.push(place);
-    }
-    fn add_output(&mut self, place: Place){
-        self.outputs.push(place);
-    }
-
-    fn fire(&mut self){ // function to fire the transition
-        for input in &mut self.inputs {
-            if !input.remove_tokens(1) {
-                panic!("Not enough tokens in place {}", input.name);
-            }
-        }
-        for output in &mut self.outputs {
-            output.add_tokens(1);
-        }
+    fn fire_production(&mut self) {
+        println!("before {} fire_production:\n{:?}\n", self.name, self.input);
+        self.input.add_tokens(self.weight);
+        println!("{} -> {:?}", self.input.name, self.input)
     }
 }
-
 
 fn main() {
     // Create new places for the reagents's tokens and the product's tokens.
-    let hydrogen = Place::new("hydrogen", 2);
-    let oxygen = Place::new("oxygen", 3);
-    let water = Place::new("water", 0);
+    let mut hydrogen = Place::new("hydrogen", 2);
+    let mut oxygen = Place::new("oxygen", 3);
+    let mut water = Place::new("water", 0);
 
     // Create a transition
-    let mut reaction = Transition::new("Water synthesis"); 
-
-    // Add inputs and outputs
-    reaction.add_input(hydrogen);
-    reaction.add_input(oxygen);
-    reaction.add_output(water);
-
-    // fire the transition
-    reaction.fire();
+    let mut reaction0 = Transition::new("Hydrogen consumption", 2, &mut hydrogen);
+    let mut reaction1 = Transition::new("Oxygen consumption", 1, &mut oxygen);
+    let mut reaction2 = Transition::new("Water production", 2, &mut water);
+    // Fire the transitions
+    reaction0.fire_consumption();
+    reaction1.fire_consumption();
+    reaction2.fire_production();
 }
