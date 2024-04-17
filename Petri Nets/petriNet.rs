@@ -1,36 +1,11 @@
-#[derive(Debug)]
-struct Place {
-    name: String,
-    tokens: u32,
-}
-
-impl Place {
-    fn new(name: &str, tokens: u32) -> Self {
-        Self {
-            name: name.to_string(),
-            tokens,
-        }
-    }
-
-    fn add_tokens(&mut self, amount: u32) {
-        self.tokens += amount;
-    }
-
-    fn remove_tokens(&mut self, amount: u32) -> Result<(), &'static str> {
-        if self.tokens >= amount {
-            self.tokens -= amount;
-            Ok(())
-        } else {
-            Err("Not enough tokens")
-        }
-    }
-}
+mod place;
+use place::Place;
 
 #[derive(Debug)]
 struct Transition<'a> {
     name: String,
-    inputs: Vec<(&'a mut Place, u32)>,
-    outputs: Vec<(&'a mut Place, u32)>,
+    inputs: Vec<(&'a mut Place, u32)>, // (place, amount) tuple
+    outputs: Vec<(&'a mut Place, u32)>, // (place, amount) tuple
 }
 
 impl<'a> Transition<'a> {
@@ -72,29 +47,29 @@ impl<'a> Transition<'a> {
 
 fn main() {
     // Define places
-    let mut glucose = Place::new("Glucose", 10); // Initial amount of glucose
-    let mut atp = Place::new("ATP", 5); // Initial amount of ATP
-    let mut pyruvate = Place::new("Pyruvate", 0); // Initial amount of pyruvate
+    let mut hydrogen = Place::new("Hydrogen", 1); // Initial amount of hydrogen
+    let mut oxygen = Place::new("Oxygen", 2); // Initial amount of Oxygen
+    let mut water = Place::new("water", 0); // Initial amount of water
 
     // Initial state
     println!("Initial state:");
-    println!("{:?}", glucose);
-    println!("{:?}", atp);
-    println!("{:?}", pyruvate);
+    println!("{:?}", hydrogen);
+    println!("{:?}", oxygen);
+    println!("{:?}", water);
 
     // Define transition
-    let mut glycolysis = Transition::new("Glycolysis");
-    glycolysis.add_input(&mut glucose, 1); // Consumes 1 glucose
-    glycolysis.add_input(&mut atp, 2); // Consumes 2 ATP
-    glycolysis.add_output(&mut pyruvate, 2); // Produces 2 pyruvate
+    let mut water_synthesis = Transition::new("Glycolysis");
+    water_synthesis.add_input(&mut hydrogen, 2); // Consumes 1 hydrogen
+    water_synthesis.add_input(&mut oxygen, 1); // Consumes 2 oxygen
+    water_synthesis.add_output(&mut water, 2); // Produces 2 water molecules
 
     // Fire the transition (simulate a step in the metabolic pathway)
-    match glycolysis.fire() {
+    match water_synthesis.fire() {
         Ok(()) => {
             println!("\nAfter firing the transition (Glycolysis):");
-            println!("{:?}", glucose);
-            println!("{:?}", atp);
-            println!("{:?}", pyruvate);
+            println!("{:?}", hydrogen);
+            println!("{:?}", oxygen);
+            println!("{:?}", water);
         }
         Err(err) => println!("Failed to fire transition: {}", err),
     }
